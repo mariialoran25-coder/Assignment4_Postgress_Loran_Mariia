@@ -1,287 +1,165 @@
-create schema hotel;
+create schema hms;
 
 
-CREATE TABLE IF NOT EXISTS Hotel (
+CREATE TABLE IF NOT EXISTS hms.Hotel (
     IdHotel SERIAL PRIMARY KEY,
     Name VARCHAR(500),
     City VARCHAR(500)
 );
+COMMENT ON TABLE hms.Hotel IS 'Table to store Hotel information';
+COMMENT ON COLUMN hms.Hotel.IdHotel IS 'Unique identifier for each Hotel';
+COMMENT ON COLUMN hms.Hotel.Name IS 'Name of Hotel';
+COMMENT ON COLUMN hms.Hotel.City IS 'In which city located Hotel';
 
-COMMENT ON TABLE Hotel IS 'Table to store Hotel information';
-COMMENT ON COLUMN Hotel.IdHotel IS 'Unique identifier for each Hotel';
--- COMMENT ON COLUMN Hotel.IdReviews IS 'Foreign key';
--- COMMENT ON COLUMN Hotel.IdRating IS 'Foreign key';
-COMMENT ON COLUMN Hotel.Name IS 'Name of Hotel';
-COMMENT ON COLUMN Hotel.City IS 'In which city located Hotel';
+--------------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hms.Room (
+    IDRoom SERIAL PRIMARY KEY,
+    IdHotel INT REFERENCES hms.Hotel(IdHotel),
+    room_number INT NOT NULL,
+    type VARCHAR(50),
+    cost NUMERIC(10,2),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('free', 'occupied'))
+);
+COMMENT ON TABLE hms.Room IS 'Table to store room information';
+COMMENT ON COLUMN hms.Room.IDRoom IS 'Unique identifier for each room';
+COMMENT ON COLUMN hms.Room.type IS 'Type of the room (Luxe, Standart)';
+COMMENT ON COLUMN hms.Room.cost IS 'Cost of the room';
+COMMENT ON COLUMN hms.Room.status IS 'Status of the room (Free, Occupied)';
 
 -------------------------------------------------------------------------------------------------------
-
-
-CREATE TABLE IF NOT EXISTS Guests (
+CREATE TABLE IF NOT EXISTS hms.Guests (
     IDGuest SERIAL PRIMARY KEY,
     first_name VARCHAR(200) NOT NULL,
     last_name VARCHAR(200) NOT NULL,
     email VARCHAR(200) NOT NULL UNIQUE,
-    phone VARCHAR(20) NOT NULL,
-
-    passport  VARCHAR(20) NOT NULL,
-    status VARCHAR(50) NOT NULL CHECK (
-        status IN ('single', 'couple', 'married')
-    )
+    phone VARCHAR(20) NOT NULL
 );
-COMMENT ON TABLE Guests IS 'Table to store guests information';
-COMMENT ON COLUMN Guests.IDGuest IS 'Unique identifier for each guests';
-COMMENT ON COLUMN Guests.first_name IS 'First name of the guest';
-COMMENT ON COLUMN Guests.last_name IS 'Last name of the guest';
-COMMENT ON COLUMN Guests.email IS 'Email address of the guest';
-COMMENT ON COLUMN Guests.phone IS 'Phone number of the guest';
-COMMENT ON COLUMN Guests.passport IS 'Passport of the guest';
-COMMENT ON COLUMN Guests.status IS 'Status of the guest';
--- COMMENT ON COLUMN Guests.course IS 'Course number the guest is enrolled in';
--- COMMENT ON COLUMN Guests.speciality IS 'Speciality of the guest';
--- COMMENT ON COLUMN Guests.active IS 'Indicates whether the guest is active or not';
+COMMENT ON TABLE hms.Guests IS 'Table to store guests information';
+COMMENT ON COLUMN hms.Guests.IDGuest IS 'Unique identifier for each guests';
+COMMENT ON COLUMN hms.Guests.first_name IS 'First name of the guest';
+COMMENT ON COLUMN hms.Guests.last_name IS 'Last name of the guest';
+COMMENT ON COLUMN hms.Guests.email IS 'Email address of the guest';
+COMMENT ON COLUMN hms.Guests.phone IS 'Phone number of the guest';
 
 --------------------------------------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS Room (
-    id VARCHAR(36) PRIMARY KEY,
-    IdHotel INT,
-    building VARCHAR(200),
-    floor INT,
-    number INT,
-    type VARCHAR(200),
-    cost INT,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('free', 'occupied room')),
-    number_of_guest INT CHECK (number_of_guest > 0)
+CREATE TABLE IF NOT EXISTS hms.Booking (
+    IDBooking SERIAL PRIMARY KEY,
+    IDRoom INT REFERENCES hms.Room(IDRoom),
+    IDGuest INT REFERENCES hms.Guests(IDGuest),
+    arrival_date date not null,
+    departure_date  date not null,
+    total_sum NUMERIC(12,2)
 );
+COMMENT ON TABLE hms.Booking IS 'Table to store Booking information';
+COMMENT ON COLUMN hms.Booking.IDBooking IS 'Unique identifier for each Booking';
+COMMENT ON COLUMN hms.Booking.IDRoom IS 'Foreign key';
+COMMENT ON COLUMN hms.Booking.arrival_date IS 'Arrival date of the Booking';
+COMMENT ON COLUMN hms.Booking.departure_date IS 'Departure date of the Booking';
+COMMENT ON COLUMN hms.Booking.total_sum IS 'Total Sum of the Booking';
 
-COMMENT ON TABLE Room IS 'Table to store room information';
-COMMENT ON COLUMN Room.id IS 'Unique identifier for each room';
-COMMENT ON COLUMN Room.building IS 'Building where the room is located';
-COMMENT ON COLUMN Room.floor IS 'Floor number where the room is located';
-COMMENT ON COLUMN Room.number IS 'Room number';
-COMMENT ON COLUMN Room.type IS 'Type of the room (Luxe, Standart)';
-COMMENT ON COLUMN Room.cost IS 'Cost of the room';
-COMMENT ON COLUMN Room.status IS 'Status of the room (Free, Occupied)';
-COMMENT ON COLUMN Room.number_of_guest IS 'Number of guest in the room';
-
---------------------------------------------------------------------------------------------------------
-
-
-create table Review
+-----------------------------------------------------------------------------------------------------
+create table hms.Review
 (
     ReviewID serial primary key,
     IDGuest  int,
-    IDHotel  int,
+    IDHotel  int REFERENCES hms.Hotel(IdHotel),
     Description varchar(100),
-    Score int,
-    foreign key(IDGuest) references  Guests(IDGuest),
-    foreign key(IDHotel) references  Hotel(IDHotel)
+    Score int CHECK ( Score>=1 AND Score<=5 ),
+    foreign key(IDGuest) references  hms.Guests(IDGuest),
+    foreign key(IDHotel) references   hms.Hotel(IDHotel)
 );
-
-COMMENT ON TABLE Review IS 'Table to store Review information';
-COMMENT ON COLUMN Review.ReviewID IS 'Unique identifier for each Review';
-COMMENT ON COLUMN Review.IDGuest IS 'Foreign key';
-COMMENT ON COLUMN Review.IDHotel IS 'Foreign key';
-COMMENT ON COLUMN Review.Description IS 'Description of the feedback';
-COMMENT ON COLUMN Review.Score IS 'Score of the hotel';
+COMMENT ON TABLE hms.Review IS 'Table to store Review information';
+COMMENT ON COLUMN hms.Review.ReviewID IS 'Unique identifier for each Review';
+COMMENT ON COLUMN hms.Review.IDGuest IS 'Foreign key';
+COMMENT ON COLUMN hms.Review.IDHotel IS 'Foreign key';
+COMMENT ON COLUMN hms.Review.Description IS 'Description of the feedback';
+COMMENT ON COLUMN hms.Review.Score IS 'Score of the hotel';
 
 ------------------------------------------------------------------------------------------------------
-
-create table Rate
+create table hms.Rate
 (
     RateID serial primary key,
     IDGuest  int,
     IDHotel  int,
-    foreign key(IDGuest) references  Guests(IDGuest),
-    foreign key(IDHotel) references  Hotel(IDHotel)
+    foreign key(IDGuest) references   hms.Guests(IDGuest),
+    foreign key(IDHotel) references   hms.Hotel(IDHotel)
 );
-
-COMMENT ON TABLE Rate IS 'Table to store Rate information';
-COMMENT ON COLUMN Rate.RateID IS 'Unique identifier for each Rate';
-COMMENT ON COLUMN Rate.IDHotel IS 'Foreign key';
-
+COMMENT ON TABLE hms.Rate IS 'Table to store Rate information';
+COMMENT ON COLUMN hms.Rate.RateID IS 'Unique identifier for each Rate';
+COMMENT ON COLUMN hms.Rate.IDHotel IS 'Foreign key';
 
 ------------------------------------------------------------------------------------------------------
-
-
-CREATE TABLE Promo_code(
+CREATE TABLE hms.Promo_code(
     id INT PRIMARY KEY,
-
     code VARCHAR(50),
     type VARCHAR(100),
     discount DECIMAL(10,2),
-    restaurant_id INT,
-    FOREIGN KEY (restaurant_id) REFERENCES restaurant(restaurant_id)
+    IDHotel INT REFERENCES hms.Hotel(IdHotel),
+    FOREIGN KEY (IDHotel) REFERENCES  hms.Hotel(IDHotel)
 );
+COMMENT ON TABLE hms.Promo_code IS 'Table to store Promo_code information';
+COMMENT ON COLUMN hms.Promo_code.id IS 'Unique identifier for each Promo_code';
+COMMENT ON COLUMN hms.Promo_code.code IS 'Code of Promo_code';
+COMMENT ON COLUMN hms.Promo_code.type IS 'Type of Promo_code';
+COMMENT ON COLUMN hms.Promo_code.discount IS 'Description of the feedback';
+COMMENT ON COLUMN hms.Promo_code.IDHotel IS 'Foreign key';
 
-
-COMMENT ON TABLE Promo_code IS 'Table to store Promo_code information';
-COMMENT ON COLUMN Promo_code.id IS 'Unique identifier for each Promo_code';
-COMMENT ON COLUMN Promo_code.code IS 'Code of Promo_code';
-COMMENT ON COLUMN Promo_code.type IS 'Type of Promo_code';
-COMMENT ON COLUMN Promo_code.discount IS 'Description of the feedback';
-COMMENT ON COLUMN Promo_code.restaurant_id IS 'Foreign key';
 ------------------------------------------------------------------------------------------------------
-
-
-CREATE TABLE loyalty(
+CREATE TABLE hms.loyalty(
     IDLoyalty INT PRIMARY KEY,
     type VARCHAR(100),
     discount DECIMAL(10,2),
     score INT,
-    user_id INT,
-    FOREIGN KEY (user_id) REFERENCES clients(client_id)
+    IDGuest INT references hms.Guests(IDGuest)
+   -- FOREIGN KEY (IDGuest) REFERENCES  hms.Guests(IDGuest)
 );
+COMMENT ON TABLE hms.loyalty IS 'Table to store room information';
+COMMENT ON COLUMN hms.loyalty.IDLoyalty IS 'Unique identifier for each room';
+COMMENT ON COLUMN hms.loyalty.type IS 'Type of loyalty';
+COMMENT ON COLUMN hms.loyalty.discount IS 'Discount of loyalty';
+COMMENT ON COLUMN hms.loyalty.score IS 'Score of loyalty';
+COMMENT ON COLUMN hms.loyalty.IDGuest IS 'Foreign key';
 
-COMMENT ON TABLE loyalty IS 'Table to store room information';
-COMMENT ON COLUMN loyalty.IDLoyalty IS 'Unique identifier for each room';
-COMMENT ON COLUMN loyalty.type IS 'Type of loyalty';
-COMMENT ON COLUMN loyalty.discount IS 'Discount of loyalty';
-COMMENT ON COLUMN loyalty.score IS 'Score of loyalty';
-COMMENT ON COLUMN loyalty.user_id IS 'Foreign key';
 ------------------------------------------------------------------------------------------------------
-CREATE TABLE sales(
+CREATE TABLE hms.sales(
     IDSales INT PRIMARY KEY,
     discount DECIMAL(10,2),
     restaurant_id INT
 );
-
-
-COMMENT ON TABLE sales IS 'Table to store sales information';
-COMMENT ON COLUMN sales.IDSales IS 'Unique identifier for each sales';
-COMMENT ON COLUMN sales.discount IS  'Discount of sales';
-COMMENT ON COLUMN sales.restaurant_id IS 'Foreign key';
+COMMENT ON TABLE hms.sales IS 'Table to store sales information';
+COMMENT ON COLUMN hms.sales.IDSales IS 'Unique identifier for each sales';
+COMMENT ON COLUMN hms.sales.discount IS  'Discount of sales';
+COMMENT ON COLUMN hms.sales.restaurant_id IS 'Foreign key';
 
 ------------------------------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS hms.Services (
+    IDService SERIAL PRIMARY KEY,
+    name VARCHAR(255) not null,
+    cost NUMERIC(10,2) NOT NULL CHECK ( cost > 0)
+);
 
-
-------------------------------------------------------------------------------------------------------
-
-
-------------------------------------------------------------------------------------------------------
-
+COMMENT ON TABLE hms.Services IS 'Table to store Services schedule';
+COMMENT ON COLUMN hms.Services.IDService IS 'Unique identifier for each Services schedule';
+COMMENT ON COLUMN hms.Services.name IS 'Name of the Services';
+COMMENT ON COLUMN hms.Services.cost IS 'Cost of the Services';
 
 --------------------------------------------------------------------------------------------------------
 
-
-
-CREATE TABLE IF NOT EXISTS Booking (
-    IDBooking VARCHAR(36) PRIMARY KEY,
-    IDRoom INT,
-    arrival_date date,
-    departure_date TIME,
-    total_sum NUMERIC
+CREATE TABLE IF NOT EXISTS hms.Booking_Services (
+    IDBooking INT REFERENCES hms.Booking(IDBooking),
+    IDService INT REFERENCES hms.Services(IDService),
+    PRIMARY KEY (IDBooking, IDService)
 );
 
-COMMENT ON TABLE Booking IS 'Table to store Booking information';
-COMMENT ON COLUMN Booking.IDBooking IS 'Unique identifier for each Booking';
-COMMENT ON COLUMN Booking.IDRoom IS 'Foreign key';
-COMMENT ON COLUMN Booking.arrival_date IS 'Arrival date of the Booking';
-COMMENT ON COLUMN Booking.departure_date IS 'Departure date of the Booking';
-COMMENT ON COLUMN Booking.total_sum IS 'Total Sum of the Booking';
-
-
---------------------------------------------------------------------------------------------------------
-
-
-
-CREATE TABLE IF NOT EXISTS Services (
-    id INT PRIMARY KEY,
-    name TIME,
-    cost TIME (cost > 0)
-);
-
-COMMENT ON TABLE Services IS 'Table to store Services schedule';
-COMMENT ON COLUMN Services.id IS 'Unique identifier for each Services schedule';
-COMMENT ON COLUMN Services.name IS 'Name of the Services';
-COMMENT ON COLUMN Services.cost IS 'Cost of the Services';
-
---------------------------------------------------------------------------------------------------------
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-CREATE TABLE IF NOT EXISTS instructors_courses (
-    instructor_id VARCHAR(36) NOT NULL REFERENCES Booking(id) ON DELETE CASCADE,
-    course_id VARCHAR(36) NOT NULL REFERENCES Hotel(id) ON DELETE CASCADE,
-    PRIMARY KEY (instructor_id, course_id)
-);
-
-COMMENT ON TABLE instructors_courses IS 'Table to store relationship between instructors and courses';
-COMMENT ON COLUMN instructors_courses.instructor_id IS 'Identifier for the instructor';
-COMMENT ON COLUMN instructors_courses.course_id IS 'Identifier for the course';
-
-
---------------------------------------------------------------------------------------------------------
-
-
-CREATE TABLE IF NOT EXISTS students_course_groups (
-    id VARCHAR(36) PRIMARY KEY,
-    course_id VARCHAR(36) NOT NULL REFERENCES Hotel(id) ON DELETE CASCADE
-);
-
-COMMENT ON TABLE students_course_groups IS 'Table to store student course groups';
-COMMENT ON COLUMN students_course_groups.id IS 'Unique identifier for each student course group';
-COMMENT ON COLUMN students_course_groups.course_id IS 'Identifier for the course';
-
---------------------------------------------------------------------------------------------------------
-
-
-
-CREATE TABLE IF NOT EXISTS students_course_group_students (
-    student_id VARCHAR(36) NOT NULL REFERENCES Guests(id) ON DELETE CASCADE,
-    group_id VARCHAR(36) NOT NULL REFERENCES students_course_groups(id) ON DELETE CASCADE,
-    PRIMARY KEY (student_id, group_id)
-);
-
-COMMENT ON TABLE students_course_group_students IS 'Table to store relationship between students and course groups';
-COMMENT ON COLUMN students_course_group_students.student_id IS 'Identifier for the student';
-COMMENT ON COLUMN students_course_group_students.group_id IS 'Identifier for the student course group';
-
-
-
-
-
-
-
-CREATE TABLE IF NOT EXISTS schedule (
-    id INT PRIMARY KEY,
-    course_id VARCHAR(36) REFERENCES Hotel(id),
-    instructor_id VARCHAR(36) REFERENCES Booking(id),
-    students_course_group_id VARCHAR(36) REFERENCES students_course_groups(id),
-    week_day VARCHAR(20),
-    lesson_schedule_id INT REFERENCES Services(id),
-    room_id VARCHAR(36) REFERENCES Room(id),
-    CONSTRAINT schedule_unique_key UNIQUE (course_id, instructor_id, students_course_group_id, room_id)
-);
-
-COMMENT ON TABLE schedule IS 'Table to store schedule information';
-COMMENT ON COLUMN schedule.id IS 'Unique identifier for each schedule entry';
-COMMENT ON COLUMN schedule.course_id IS 'Identifier for the course';
-COMMENT ON COLUMN schedule.instructor_id IS 'Identifier for the instructor';
-COMMENT ON COLUMN schedule.students_course_group_id IS 'Identifier for the student course group';
-COMMENT ON COLUMN schedule.week_day IS 'Day of the week for the schedule';
-COMMENT ON COLUMN schedule.lesson_schedule_id IS 'Identifier for the lesson schedule';
-COMMENT ON COLUMN schedule.room_id IS 'Identifier for the room';
 
 
 
 --------------------------------------------------------------------------------------------------------
 
-CREATE INDEX IF NOT EXISTS idx_schedule_course_id ON schedule(course_id);
-CREATE INDEX IF NOT EXISTS idx_schedule_instructor_id ON schedule(instructor_id);
-CREATE INDEX IF NOT EXISTS idx_schedule_room_id ON schedule(room_id);
-CREATE INDEX IF NOT EXISTS idx_students_email ON Guests(email);
+CREATE INDEX IF NOT EXISTS idx_guest_email ON hms.Guests(email);
+CREATE INDEX IF NOT EXISTS idx_booking_dates ON hms.Booking(arrival_date);
+CREATE INDEX IF NOT EXISTS idx_room_hotel ON hms.Room(status);
